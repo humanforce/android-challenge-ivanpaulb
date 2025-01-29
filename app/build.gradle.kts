@@ -74,6 +74,7 @@ dependencies {
     implementation(libs.ui)
     implementation (libs.coil.compose)
     implementation (libs.play.services.location)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.core.ktx)

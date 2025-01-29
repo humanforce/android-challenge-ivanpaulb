@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import android.location.Location
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.material.progressindicator.CircularProgressIndicator
+import com.humanforce.humanforceandroidengineeringchallenge.presentation.viewmodel.LocationState
 import com.humanforce.humanforceandroidengineeringchallenge.presentation.viewmodel.LocationViewModel
 import com.humanforce.humanforceandroidengineeringchallenge.presentation.viewmodel.WeatherUiState
 import com.humanforce.humanforceandroidengineeringchallenge.presentation.viewmodel.WeatherViewModel
@@ -63,8 +64,8 @@ fun WeatherDashboard(weatherViewModel: WeatherViewModel = hiltViewModel(),
         }
 
         LaunchedEffect(locationState) {
-            locationState?.let {
-                var currentLocation = locationState as Location
+            locationState.let {
+                val currentLocation = (locationState as LocationState.Success)
                 weatherViewModel.loadWeather(currentLocation.latitude, currentLocation.longitude)
             }
 

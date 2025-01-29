@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Humanforce Android Engineering Challenge</string>
+    <string name="generic_error">Something went wrong. Please try again later</string>
 </resources>
