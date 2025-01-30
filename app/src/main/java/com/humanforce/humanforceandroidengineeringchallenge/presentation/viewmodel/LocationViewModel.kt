@@ -1,10 +1,15 @@
 package com.humanforce.humanforceandroidengineeringchallenge.presentation.viewmodel
 
 import android.annotation.SuppressLint
-import android.location.Location
+import android.os.Looper
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.Priority
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,8 +28,7 @@ class LocationViewModel @Inject constructor(
 
     @SuppressLint("MissingPermission")
     fun getCurrentLocation() {
-        viewModelScope.launch(Dispatchers.IO){
-
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                     if (location != null) {
@@ -36,9 +40,11 @@ class LocationViewModel @Inject constructor(
                     _locationState.value = LocationState.Error("Error getting location: ${exception.message}")
                 }
             } catch (e: Exception) {
-                _locationState.value = LocationState.Error("Error requesting location: ${e.message}")
+                _locationState.value =
+                    LocationState.Error("Error requesting location: ${e.message}")
             }
         }
+
     }
 
 

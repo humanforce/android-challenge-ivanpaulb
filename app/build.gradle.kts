@@ -69,12 +69,12 @@ dependencies {
     implementation (libs.androidx.room.runtime)
     kapt(libs.androidx.room.compiler)
     implementation (libs.androidx.room.ktx)
-    implementation(libs.androidx.material3)
     implementation(libs.androidx.activity.compose)
     implementation(libs.ui)
     implementation (libs.coil.compose)
     implementation (libs.play.services.location)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation (libs.material3)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.core.ktx)

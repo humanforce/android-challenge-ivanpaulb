@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.State
+import com.humanforce.humanforceandroidengineeringchallenge.data.api.Resource
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 
@@ -35,6 +36,7 @@ class WeatherViewModel @Inject constructor(
     }
 
     fun loadWeather(lat: Double, lon: Double) {
+        _uiState.value = WeatherUiState.Loading
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val currentWeather = getCurrentWeatherUseCase(lat, lon)
@@ -50,6 +52,6 @@ class WeatherViewModel @Inject constructor(
 
 sealed class WeatherUiState {
     data object Loading : WeatherUiState()
-    data class Success(val weather: Weather, val forecast: List<DailyForecast>) : WeatherUiState()
+    data class Success(val weather: Resource<Weather>, val forecast: Resource<List<DailyForecast>>) : WeatherUiState()
     data class Error(val message: String) : WeatherUiState()
 }

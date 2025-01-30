@@ -1,5 +1,6 @@
 package com.humanforce.humanforceandroidengineeringchallenge.di
 
+import com.humanforce.humanforceandroidengineeringchallenge.data.api.ApiCallHelper
 import com.humanforce.humanforceandroidengineeringchallenge.data.api.WeatherApi
 import com.humanforce.humanforceandroidengineeringchallenge.data.repo.WeatherRepositoryImpl
 import com.humanforce.humanforceandroidengineeringchallenge.domain.repo.WeatherRepository
@@ -28,7 +29,13 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideWeatherRepository(api: WeatherApi): WeatherRepository {
-        return WeatherRepositoryImpl(api)
+    fun provideWeatherRepository(api: WeatherApi, apiHelper: ApiCallHelper ): WeatherRepository {
+        return WeatherRepositoryImpl(api, apiHelper)
+    }
+
+    @Provides
+    @Singleton
+    fun provideApiCallHelper(): ApiCallHelper {
+        return ApiCallHelper()
     }
 }

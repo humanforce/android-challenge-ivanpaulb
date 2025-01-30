@@ -15,9 +15,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.humanforce.humanforceandroidengineeringchallenge.R
 import com.humanforce.humanforceandroidengineeringchallenge.utils.WeatherUtils
 
 @Composable
@@ -79,7 +81,7 @@ fun WeatherWidget(
             ) {
                 Text(
                     modifier = Modifier.padding(5.dp),
-                    text = "Humidity",
+                    text = stringResource(R.string.humidity_label),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold
@@ -98,7 +100,7 @@ fun WeatherWidget(
             )  {
                 Text(
                     modifier = Modifier.padding(5.dp),
-                    text = "Visibility",
+                    text = stringResource(R.string.visibility_label),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold
@@ -117,7 +119,7 @@ fun WeatherWidget(
             )  {
                 Text(
                     modifier = Modifier.padding(5.dp),
-                    text = "Pressure",
+                    text = stringResource(R.string.pressure_label),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold

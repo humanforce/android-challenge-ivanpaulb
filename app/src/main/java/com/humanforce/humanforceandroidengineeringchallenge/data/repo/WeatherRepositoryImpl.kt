@@ -1,7 +1,8 @@
 package com.humanforce.humanforceandroidengineeringchallenge.data.repo
 
-import android.util.Log
 import com.humanforce.humanforceandroidengineeringchallenge.BuildConfig
+import com.humanforce.humanforceandroidengineeringchallenge.data.api.ApiCallHelper
+import com.humanforce.humanforceandroidengineeringchallenge.data.api.Resource
 import com.humanforce.humanforceandroidengineeringchallenge.data.api.WeatherApi
 import com.humanforce.humanforceandroidengineeringchallenge.data.mapper.toDailyForecastListDomainModel
 import com.humanforce.humanforceandroidengineeringchallenge.data.mapper.toWeatherDomainModel
@@ -13,15 +14,20 @@ import javax.inject.Singleton
 
 @Singleton
 class WeatherRepositoryImpl @Inject constructor(
-    private val api: WeatherApi
+    private val api: WeatherApi,
+    private val apiCallHelper: ApiCallHelper
 ) : WeatherRepository {
-    override suspend fun getCurrentWeather(lat: Double, lon: Double): Weather {
-        val response = api.getCurrentWeather(lat, lon, apiKey = BuildConfig.OPEN_WEATHER_MAP_API_KEY)
-        return response.toWeatherDomainModel()
+    override suspend fun getCurrentWeather(lat: Double, lon: Double): Resource<Weather> {
+        return apiCallHelper.safeApiCall {
+            api.getCurrentWeather(lat, lon, apiKey = BuildConfig.OPEN_WEATHER_MAP_API_KEY)
+                .toWeatherDomainModel()
+        }
     }
 
-    override suspend fun getFiveDayForecast(lat: Double, lon: Double): List<DailyForecast> {
-        val response = api.getFiveDayForecast(lat, lon, apiKey = BuildConfig.OPEN_WEATHER_MAP_API_KEY)
-        return response.toDailyForecastListDomainModel()
+    override suspend fun getFiveDayForecast(lat: Double, lon: Double): Resource<List<DailyForecast>> {
+        return apiCallHelper.safeApiCall {
+            api.getFiveDayForecast(lat, lon, apiKey = BuildConfig.OPEN_WEATHER_MAP_API_KEY)
+                .toDailyForecastListDomainModel()
+        }
     }
 }
