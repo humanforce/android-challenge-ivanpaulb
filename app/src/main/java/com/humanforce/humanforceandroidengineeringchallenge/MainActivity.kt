@@ -29,6 +29,7 @@ import androidx.core.content.PermissionChecker
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.humanforce.humanforceandroidengineeringchallenge.presentation.ui.LocationPermissionNotice
 import com.humanforce.humanforceandroidengineeringchallenge.presentation.ui.WeatherDashboard
 import com.humanforce.humanforceandroidengineeringchallenge.presentation.ui.theme.AppTheme
 import com.humanforce.humanforceandroidengineeringchallenge.presentation.viewmodel.LocationState
@@ -42,15 +43,16 @@ class MainActivity : ComponentActivity() {
     private val weatherViewModel: WeatherViewModel by viewModels()
     private val locationViewModel: LocationViewModel by viewModels()
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         val requestPermissionLauncher =
             registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
                 if (isGranted) {
                     locationViewModel.getCurrentLocation()
                 }
             }
+
 
         setContent {
             val locationState by locationViewModel.locationState.collectAsState()
@@ -69,7 +71,7 @@ class MainActivity : ComponentActivity() {
             val fallbackScenarioModifier = Modifier
                 .fillMaxWidth()
                 .wrapContentSize()
-                .padding(vertical = 50.dp)
+                .padding(40.dp)
 
             AppTheme {
                 when (locationState) {
@@ -78,34 +80,37 @@ class MainActivity : ComponentActivity() {
                             CircularProgressIndicator()
                         }
                     }
+
                     is LocationState.Success -> {
                         WeatherDashboard(weatherViewModel, locationViewModel)
                     }
-                    is LocationState.Error -> {
-                        val context = LocalContext.current
-                        Toast.makeText(context, stringResource(R.string.generic_error),
-                            Toast.LENGTH_SHORT).show()
-                    }
-                    is LocationState.LocationServicesDisabled -> {
-                        Column(modifier = fallbackScenarioModifier) {
-                            Button(onClick = {
-                                val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-                                startActivity(intent)
-                            }) {
-                                Text("Enable Location Services")
-                            }
-                        }
-                    }
-                    is LocationState.PermissionDenied -> {
 
-                        Column(modifier = fallbackScenarioModifier) {
-                            Button(onClick = {
-                                requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-                            }) {
-                                Text("Grant Location Permission")
-                            }
+                    is LocationState.Error -> {
+                        Toast.makeText(
+                            LocalContext.current,
+                            (locationState as LocationState.Error).errorMessage,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
+                    is LocationState.LocationServicesDisabled -> {
+                        LocationPermissionNotice(
+                            modifier = fallbackScenarioModifier,
+                            btnLabel= stringResource(R.string.grant_location_label)){
+                            val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                            startActivity(intent)
                         }
                     }
+
+                    is LocationState.PermissionDenied -> {
+                        LocationPermissionNotice(
+                            modifier = fallbackScenarioModifier,
+                            btnLabel= stringResource(R.string.grant_location_label)){
+                            requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+
+                        }
+                    }
+
                 }
             }
         }
@@ -116,6 +121,7 @@ class MainActivity : ComponentActivity() {
                 checkLocationServicesEnabled()
             }
         }
+
     }
 
     private fun checkLocationServicesEnabled() {
@@ -134,4 +140,5 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
 }

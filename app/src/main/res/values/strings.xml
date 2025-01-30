@@ -1,4 +1,13 @@
 <resources>
     <string name="app_name">Humanforce Android Engineering Challenge</string>
     <string name="generic_error">Something went wrong. Please try again later</string>
+    <string name="forecast_title">5-day Weather Forecast</string>
+    <string name="humidity_label">Humidity</string>
+    <string name="visibility_label">Visibility</string>
+    <string name="pressure_label">Pressure</string>
+    <string name="location_permission_request">To show you the current weather condition at your current location, this app needs access to your precise location. This will only be used for this purpose</string>
+    <string name="search_city_label">Search City</string>
+    <string name="enable_location_label">Enable Location Services</string>
+    <string name="grant_location_label">Grant Location Services</string>
+    <string name="location_permission_denied">Permission denied</string>
 </resources>
