@@ -1,10 +1,8 @@
 package com.humanforce.humanforceandroidengineeringchallenge.presentation.viewmodel
 
-import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.humanforce.humanforceandroidengineeringchallenge.domain.models.DailyForecast
 import com.humanforce.humanforceandroidengineeringchallenge.domain.models.Weather
 import com.humanforce.humanforceandroidengineeringchallenge.domain.usecase.GetCurrentWeatherUseCase
 import com.humanforce.humanforceandroidengineeringchallenge.domain.usecase.GetFiveDayForecastUseCase
@@ -15,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.State
 import com.humanforce.humanforceandroidengineeringchallenge.data.api.Resource
+import com.humanforce.humanforceandroidengineeringchallenge.domain.models.DailyForecast
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 
@@ -24,8 +23,11 @@ class WeatherViewModel @Inject constructor(
     private val getFiveDayForecastUseCase: GetFiveDayForecastUseCase
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<WeatherUiState>(WeatherUiState.Loading)
-    val uiState: StateFlow<WeatherUiState> = _uiState.asStateFlow()
+    private val _currWeatherState = MutableStateFlow<Resource<Weather>>(Resource.Loading)
+    val currWeatherState: StateFlow<Resource<Weather>> = _currWeatherState.asStateFlow()
+
+    private val _forecastsState = MutableStateFlow<Resource<List<DailyForecast>>>(Resource.Loading)
+    val forecastsState: StateFlow<Resource<List<DailyForecast>>> = _forecastsState.asStateFlow()
 
 
     private var _searchQuery = mutableStateOf("")
@@ -36,22 +38,16 @@ class WeatherViewModel @Inject constructor(
     }
 
     fun loadWeather(lat: Double, lon: Double) {
-        _uiState.value = WeatherUiState.Loading
+        _currWeatherState.value = Resource.Loading
         viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val currentWeather = getCurrentWeatherUseCase(lat, lon)
-                val forecast = getFiveDayForecastUseCase(lat, lon)
-                _uiState.value = WeatherUiState.Success(currentWeather, forecast)
-            } catch (e: Exception) {
-                e.message?.let { Log.e("HumanForceDebug", it) }
-                _uiState.value = WeatherUiState.Error(e.message ?: "Unknown Error")
-            }
+                _currWeatherState.value = getCurrentWeatherUseCase(lat, lon)
         }
     }
-}
 
-sealed class WeatherUiState {
-    data object Loading : WeatherUiState()
-    data class Success(val weather: Resource<Weather>, val forecast: Resource<List<DailyForecast>>) : WeatherUiState()
-    data class Error(val message: String) : WeatherUiState()
+    fun loadForecasts(lat: Double, lon: Double) {
+        _forecastsState.value = Resource.Loading
+        viewModelScope.launch(Dispatchers.IO) {
+            _forecastsState.value = getFiveDayForecastUseCase(lat, lon)
+        }
+    }
 }

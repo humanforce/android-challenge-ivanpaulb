@@ -34,9 +34,7 @@ import com.humanforce.humanforceandroidengineeringchallenge.domain.models.DailyF
 import com.humanforce.humanforceandroidengineeringchallenge.domain.models.Weather
 import com.humanforce.humanforceandroidengineeringchallenge.presentation.viewmodel.LocationState
 import com.humanforce.humanforceandroidengineeringchallenge.presentation.viewmodel.LocationViewModel
-import com.humanforce.humanforceandroidengineeringchallenge.presentation.viewmodel.WeatherUiState
 import com.humanforce.humanforceandroidengineeringchallenge.presentation.viewmodel.WeatherViewModel
-
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,7 +44,8 @@ fun WeatherDashboard(
     locationViewModel: LocationViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val uiState by weatherViewModel.uiState.collectAsState()
+    val weatherState by weatherViewModel.currWeatherState.collectAsState()
+    val forecastsState by weatherViewModel.forecastsState.collectAsState()
     val locationState by locationViewModel.locationState.collectAsState()
 
     val state = rememberPullToRefreshState()
@@ -60,7 +59,8 @@ fun WeatherDashboard(
         isRefreshing = isRefreshing,
         onRefresh = {
             isRefreshing = true
-            getWeatherData(locationState, weatherViewModel)
+            getCurrentWeather(locationState, weatherViewModel)
+            getForecasts(locationState, weatherViewModel)
         },
         state = state,
         indicator = {
@@ -74,7 +74,7 @@ fun WeatherDashboard(
         }
 
     ) {
-        Column (
+        Column(
             modifier = Modifier
                 .fillMaxSize() // Important: Fill available space
                 .verticalScroll(scrollState)
@@ -94,67 +94,71 @@ fun WeatherDashboard(
                     .padding(8.dp)
             )
 
-
-            when (uiState) {
-                is WeatherUiState.Loading -> CircularProgressIndicator(context)
-                is WeatherUiState.Success -> {
+            when (weatherState) {
+                is Resource.Loading -> CircularProgressIndicator(context)
+                is Resource.Success -> {
                     isRefreshing = false
-                    val weather = (uiState as WeatherUiState.Success).weather
-                    val forecast = (uiState as WeatherUiState.Success).forecast
-
-                    when (weather) {
-                        is Resource.Success -> {
-                            val weatherData = (weather as Resource<Weather>).data
-                            if (weatherData != null) {
-                                WeatherWidget(
-                                    weatherDetails = weatherData,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
-                        }
-
-                        is Resource.Error -> {
-                            isRefreshing = false
-                            val errorMessage = weather.message
-                            Toast.makeText(
-                                LocalContext.current, errorMessage,
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
+                    val weatherData = weatherState.data
+                    if (weatherData != null) {
+                        WeatherWidget(
+                            weatherDetails = weatherData,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
-
-                    when (forecast) {
-                        is Resource.Success -> {
-                            val forecastData = (forecast as Resource<List<DailyForecast>>).data
-                            if (forecastData != null) {
-                                ForecastWidget(
-                                    forecastDetails = forecastData,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
-                        }
-
-                        is Resource.Error -> {
-                            val errorMessage = forecast.message
-                            Toast.makeText(
-                                LocalContext.current, errorMessage,
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    }
-
                 }
 
-                is WeatherUiState.Error -> {
+                is Resource.Error -> {
+                    isRefreshing = false
                     Toast.makeText(
-                        LocalContext.current, (uiState as WeatherUiState.Error).message,
+                        LocalContext.current, (weatherState as Resource.Error).message,
                         Toast.LENGTH_SHORT
                     ).show()
+                    val weatherData = weatherState.data
+                    if (weatherData != null) {
+                        WeatherWidget(
+                            weatherDetails = weatherData,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
             }
 
+
+            when (forecastsState) {
+                is Resource.Loading -> CircularProgressIndicator(context)
+                is Resource.Success -> {
+                    isRefreshing = false
+                    val forecastData = forecastsState.data
+                    if (forecastData != null) {
+                        ForecastWidget(
+                            forecastDetails = forecastData,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+
+                is Resource.Error -> {
+                    isRefreshing = false
+                    Toast.makeText(
+                        LocalContext.current, (forecastsState as Resource.Error).message,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    val forecastData = forecastsState.data
+                    if (forecastData != null) {
+                        ForecastWidget(
+                            forecastDetails = forecastData,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+
+
+
+
             LaunchedEffect(locationState) {
-                getWeatherData(locationState, weatherViewModel)
+                getCurrentWeather(locationState, weatherViewModel)
+                getForecasts(locationState, weatherViewModel)
             }
 
         }
@@ -162,13 +166,33 @@ fun WeatherDashboard(
 
 }
 
-fun getWeatherData(locationState: LocationState, weatherViewModel: WeatherViewModel) {
-    if(locationState != LocationState.Loading) {
-        locationState.let {
-            val currentLocation = (locationState as LocationState.Success)
-            weatherViewModel.loadWeather(currentLocation.latitude, currentLocation.longitude)
+
+fun checkLocationStateThenDoAction(locationState: LocationState,
+                                  doActionWithLocation: (location: LocationState.Success) -> Unit){
+    when(locationState) {
+        is LocationState.Success -> {
+            locationState.let {
+                val currentLocation = (locationState as LocationState.Success)
+                doActionWithLocation(currentLocation)
+            }
+        }
+        else -> {
+            //do nothing for now
         }
     }
+}
+
+fun getCurrentWeather(locationState: LocationState, weatherViewModel: WeatherViewModel) {
+    checkLocationStateThenDoAction(locationState, doActionWithLocation = { currentLocation ->
+        weatherViewModel.loadWeather(currentLocation.latitude, currentLocation.longitude)
+    })
+}
+
+
+fun getForecasts(locationState: LocationState, weatherViewModel: WeatherViewModel) {
+    checkLocationStateThenDoAction(locationState, doActionWithLocation = { currentLocation ->
+        weatherViewModel.loadForecasts(currentLocation.latitude, currentLocation.longitude)
+    })
 }
 
 
