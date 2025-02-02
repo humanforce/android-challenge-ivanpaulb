@@ -1,5 +1,7 @@
 package com.humanforce.humanforceandroidengineeringchallenge.presentation.ui
 
+import android.Manifest
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -11,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -26,12 +29,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.humanforce.humanforceandroidengineeringchallenge.R
 import com.humanforce.humanforceandroidengineeringchallenge.data.api.Resource
-import com.humanforce.humanforceandroidengineeringchallenge.domain.models.DailyForecast
-import com.humanforce.humanforceandroidengineeringchallenge.domain.models.Weather
 import com.humanforce.humanforceandroidengineeringchallenge.presentation.viewmodel.LocationState
 import com.humanforce.humanforceandroidengineeringchallenge.presentation.viewmodel.LocationViewModel
 import com.humanforce.humanforceandroidengineeringchallenge.presentation.viewmodel.WeatherViewModel
@@ -47,10 +49,12 @@ fun WeatherDashboard(
     val weatherState by weatherViewModel.currWeatherState.collectAsState()
     val forecastsState by weatherViewModel.forecastsState.collectAsState()
     val locationState by locationViewModel.locationState.collectAsState()
+    val searchResultsState by locationViewModel.searchResults.collectAsState()
 
     val state = rememberPullToRefreshState()
     var isRefreshing by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
+    var searchCityText by remember { mutableStateOf("") }
 
     PullToRefreshBox(
         modifier = Modifier
@@ -59,8 +63,7 @@ fun WeatherDashboard(
         isRefreshing = isRefreshing,
         onRefresh = {
             isRefreshing = true
-            getCurrentWeather(locationState, weatherViewModel)
-            getForecasts(locationState, weatherViewModel)
+            locationViewModel.retrieveCurrentLocationState()
         },
         state = state,
         indicator = {
@@ -76,7 +79,7 @@ fun WeatherDashboard(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize() // Important: Fill available space
+                .fillMaxSize()
                 .verticalScroll(scrollState)
         ) {
 
@@ -84,9 +87,12 @@ fun WeatherDashboard(
                 CircularProgressIndicator(context)
             }
             TextField(
-                value = weatherViewModel.searchQuery.value,
-                onValueChange = { query ->
-                    weatherViewModel.searchQuery(query)
+                value = searchCityText,
+                onValueChange = {
+                    searchCityText = it
+                    if(!it.isEmpty()) {
+                        locationViewModel.searchLocation(it)
+                    }
                 },
                 label = { Text(stringResource(R.string.search_city_label)) },
                 modifier = Modifier
@@ -94,69 +100,109 @@ fun WeatherDashboard(
                     .padding(8.dp)
             )
 
-            when (weatherState) {
-                is Resource.Loading -> CircularProgressIndicator(context)
-                is Resource.Success -> {
-                    isRefreshing = false
-                    val weatherData = weatherState.data
-                    if (weatherData != null) {
-                        WeatherWidget(
-                            weatherDetails = weatherData,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+            if (searchCityText.isEmpty()) {
+                when (weatherState) {
+                    is Resource.Loading -> CircularProgressIndicator(context)
+                    is Resource.Success -> {
+                        isRefreshing = false
+
+                        val weatherData = weatherState.data
+                        if (weatherData != null) {
+                            WeatherWidget(
+                                weatherDetails = weatherData,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+
+                    is Resource.Error -> {
+                        isRefreshing = false
+                        Toast.makeText(
+                            LocalContext.current, (weatherState as Resource.Error).message,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        val weatherData = weatherState.data
+                        if (weatherData != null) {
+                            WeatherWidget(
+                                weatherDetails = weatherData,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
                     }
                 }
 
-                is Resource.Error -> {
-                    isRefreshing = false
-                    Toast.makeText(
-                        LocalContext.current, (weatherState as Resource.Error).message,
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    val weatherData = weatherState.data
-                    if (weatherData != null) {
-                        WeatherWidget(
-                            weatherDetails = weatherData,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                when (forecastsState) {
+                    is Resource.Loading -> CircularProgressIndicator(context)
+                    is Resource.Success -> {
+                        isRefreshing = false
+
+                        val forecastData = forecastsState.data
+                        if (forecastData != null) {
+                            ForecastWidget(
+                                forecastDetails = forecastData,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+
+                    is Resource.Error -> {
+                        isRefreshing = false
+                        Toast.makeText(
+                            LocalContext.current, (forecastsState as Resource.Error).message,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        val forecastData = forecastsState.data
+                        if (forecastData != null) {
+                            ForecastWidget(
+                                forecastDetails = forecastData,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
                     }
                 }
-            }
 
-
-            when (forecastsState) {
-                is Resource.Loading -> CircularProgressIndicator(context)
-                is Resource.Success -> {
-                    isRefreshing = false
-                    val forecastData = forecastsState.data
-                    if (forecastData != null) {
-                        ForecastWidget(
-                            forecastDetails = forecastData,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+            } else {
+                when (searchResultsState) {
+                    is Resource.Loading -> CircularProgressIndicator(context)
+                    is Resource.Success -> {
+                        val searchResults = searchResultsState.data
+                        if(searchResults != null) {
+                            Column {
+                                for (location in searchResults) {
+                                    Text(
+                                        modifier = Modifier.padding(5.dp)
+                                            .clickable {
+                                                searchCityText = ""
+                                                locationViewModel
+                                                    .updateLocationState(
+                                                        LocationState.Success(
+                                                            location.lat, location.long))
+                                            },
+                                        text = location.city,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
                     }
+                    is Resource.Error -> {
+                        Toast.makeText(
+                            LocalContext.current, (searchResultsState as Resource.Error).message,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
                 }
 
-                is Resource.Error -> {
-                    isRefreshing = false
-                    Toast.makeText(
-                        LocalContext.current, (forecastsState as Resource.Error).message,
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    val forecastData = forecastsState.data
-                    if (forecastData != null) {
-                        ForecastWidget(
-                            forecastDetails = forecastData,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
             }
 
 
 
 
             LaunchedEffect(locationState) {
+                isRefreshing = false
                 getCurrentWeather(locationState, weatherViewModel)
                 getForecasts(locationState, weatherViewModel)
             }
@@ -167,15 +213,17 @@ fun WeatherDashboard(
 }
 
 
-fun checkLocationStateThenDoAction(locationState: LocationState,
-                                  doActionWithLocation: (location: LocationState.Success) -> Unit){
-    when(locationState) {
+fun checkLocationStateThenDoAction(
+    locationState: LocationState,
+    doActionWithLocation: (location: LocationState.Success) -> Unit
+) {
+    when (locationState) {
         is LocationState.Success -> {
             locationState.let {
-                val currentLocation = (locationState as LocationState.Success)
-                doActionWithLocation(currentLocation)
+                doActionWithLocation(locationState)
             }
         }
+
         else -> {
             //do nothing for now
         }

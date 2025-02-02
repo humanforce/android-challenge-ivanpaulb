@@ -3,11 +3,14 @@ package com.humanforce.humanforceandroidengineeringchallenge.di
 import android.content.Context
 import androidx.room.Room
 import com.humanforce.humanforceandroidengineeringchallenge.data.api.ApiCallHelper
-import com.humanforce.humanforceandroidengineeringchallenge.data.api.WeatherApi
+import com.humanforce.humanforceandroidengineeringchallenge.data.api.ApiInterface
 import com.humanforce.humanforceandroidengineeringchallenge.data.db.AppDatabase
 import com.humanforce.humanforceandroidengineeringchallenge.data.db.ForecastDao
+import com.humanforce.humanforceandroidengineeringchallenge.data.db.LocationDao
 import com.humanforce.humanforceandroidengineeringchallenge.data.db.WeatherDao
+import com.humanforce.humanforceandroidengineeringchallenge.data.repo.LocationRepositoryImpl
 import com.humanforce.humanforceandroidengineeringchallenge.data.repo.WeatherRepositoryImpl
+import com.humanforce.humanforceandroidengineeringchallenge.domain.repo.LocationRepository
 import com.humanforce.humanforceandroidengineeringchallenge.domain.repo.WeatherRepository
 import com.humanforce.humanforceandroidengineeringchallenge.utils.NetworkUtil
 import dagger.Module
@@ -32,16 +35,32 @@ object DataModule {
     @Provides
     fun provideForecastsDao(db: AppDatabase): ForecastDao = db.forecastDao()
 
+
+    @Provides
+    fun provideLocationDao(db: AppDatabase): LocationDao = db.locationDao()
+
     @Provides
     @Singleton
     fun provideWeatherRepository(
-        api: WeatherApi,
+        api: ApiInterface,
         apiHelper: ApiCallHelper,
         weatherDao: WeatherDao,
         forecastDao: ForecastDao,
         networkUtil: NetworkUtil
     ): WeatherRepository {
         return WeatherRepositoryImpl(api, apiHelper, weatherDao, forecastDao,
+            networkUtil)
+    }
+
+    @Provides
+    @Singleton
+    fun provideLocationRepository(
+        api: ApiInterface,
+        apiHelper: ApiCallHelper,
+        locationDao: LocationDao,
+        networkUtil: NetworkUtil
+    ): LocationRepository {
+        return LocationRepositoryImpl(api, apiHelper, locationDao,
             networkUtil)
     }
 }

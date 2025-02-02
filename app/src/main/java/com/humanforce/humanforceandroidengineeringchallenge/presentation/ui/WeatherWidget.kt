@@ -20,7 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.humanforce.humanforceandroidengineeringchallenge.R
-import com.humanforce.humanforceandroidengineeringchallenge.utils.WeatherUtils
+import com.humanforce.humanforceandroidengineeringchallenge.utils.Utils
 
 @Composable
 fun WeatherWidget(
@@ -41,7 +41,7 @@ fun WeatherWidget(
         ) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(WeatherUtils.formatWeatherIconUrl(weatherDetails.icon))
+                    .data(Utils.formatWeatherIconUrl(weatherDetails.icon))
                     .crossfade(true)
                     .placeholder(android.R.drawable.ic_menu_gallery)
                     .error(android.R.drawable.ic_menu_close_clear_cancel)
@@ -50,7 +50,7 @@ fun WeatherWidget(
                 modifier = Modifier.size(70.dp).padding(5.dp)
             )
             Text(
-                text = WeatherUtils.capitalizeFirstLetter(weatherDetails.condition),
+                text = Utils.capitalizeFirstLetter(weatherDetails.condition),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold
@@ -58,14 +58,14 @@ fun WeatherWidget(
         }
 
         Text(
-            text = WeatherUtils.formatTempToCelsiusString(weatherDetails.temperature),
+            text = Utils.formatTempToCelsiusString(weatherDetails.temperature),
             style = MaterialTheme.typography.displayLarge,
             color = MaterialTheme.colorScheme.onSurface
         )
 
         Text(
             modifier = Modifier.padding(10.dp),
-            text = "Feels like ${WeatherUtils.formatTempToCelsiusString(weatherDetails.feelsLike)}",
+            text = "Feels like ${Utils.formatTempToCelsiusString(weatherDetails.feelsLike)}",
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurface
         )

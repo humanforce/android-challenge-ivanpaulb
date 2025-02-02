@@ -5,7 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.humanforce.humanforceandroidengineeringchallenge.data.models.entities.WeatherEntity
-import kotlinx.coroutines.flow.Flow
+
 
 @Dao
 interface WeatherDao {
@@ -23,4 +23,6 @@ interface WeatherDao {
 
     @Query("DELETE FROM weather_table")
     suspend fun clearWeather()
+
+
 }

@@ -2,7 +2,7 @@ package com.humanforce.humanforceandroidengineeringchallenge.di
 
 import android.content.Context
 import com.humanforce.humanforceandroidengineeringchallenge.data.api.ApiCallHelper
-import com.humanforce.humanforceandroidengineeringchallenge.data.api.WeatherApi
+import com.humanforce.humanforceandroidengineeringchallenge.data.api.ApiInterface
 import com.humanforce.humanforceandroidengineeringchallenge.utils.NetworkUtil
 import dagger.Module
 import dagger.Provides
@@ -19,12 +19,12 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideWeatherApi(): WeatherApi {
+    fun provideWeatherApi(): ApiInterface {
         return Retrofit.Builder()
-            .baseUrl("https://api.openweathermap.org/data/2.5/")
+            .baseUrl("https://api.openweathermap.org/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(WeatherApi::class.java)
+            .create(ApiInterface::class.java)
     }
 
     @Provides
@@ -35,6 +35,6 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideNetworkUtil(@ApplicationContext context: Context): NetworkUtil = NetworkUtil(context)
+    fun provideNetworkUtil(@ApplicationContext context: Context ): NetworkUtil = NetworkUtil(context)
 
 }

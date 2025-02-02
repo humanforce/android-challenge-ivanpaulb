@@ -30,13 +30,6 @@ class WeatherViewModel @Inject constructor(
     val forecastsState: StateFlow<Resource<List<DailyForecast>>> = _forecastsState.asStateFlow()
 
 
-    private var _searchQuery = mutableStateOf("")
-    val searchQuery: State<String> get() = _searchQuery
-
-    fun searchQuery(newQuery: String) {
-        _searchQuery.value = newQuery
-    }
-
     fun loadWeather(lat: Double, lon: Double) {
         _currWeatherState.value = Resource.Loading
         viewModelScope.launch(Dispatchers.IO) {
