@@ -1,12 +1,14 @@
 package com.humanforce.humanforceandroidengineeringchallenge.data.mapper
 
-import com.humanforce.humanforceandroidengineeringchallenge.data.models.ForecastResponse
-import com.humanforce.humanforceandroidengineeringchallenge.data.models.WeatherResponse
+import com.humanforce.humanforceandroidengineeringchallenge.data.models.apiresponses.ForecastResponse
+import com.humanforce.humanforceandroidengineeringchallenge.data.models.apiresponses.WeatherResponse
+import com.humanforce.humanforceandroidengineeringchallenge.data.models.entities.ForecastEntity
+import com.humanforce.humanforceandroidengineeringchallenge.data.models.entities.WeatherEntity
 import com.humanforce.humanforceandroidengineeringchallenge.domain.models.DailyForecast
 import com.humanforce.humanforceandroidengineeringchallenge.domain.models.Weather
 import com.humanforce.humanforceandroidengineeringchallenge.utils.WeatherUtils
 
-fun WeatherResponse.toWeatherDomainModel() = Weather(
+fun WeatherResponse.toWeatherEntity() = WeatherEntity(
     temperature = main.temp,
     condition = weather[0].description,
     icon = weather[0].icon,
@@ -17,10 +19,10 @@ fun WeatherResponse.toWeatherDomainModel() = Weather(
     pressure = main.pressure
 )
 
-fun ForecastResponse.toDailyForecastListDomainModel(): List<DailyForecast> {
+fun ForecastResponse.toDailyForecastListEntities() : List<ForecastEntity> {
     return list.groupBy { it.dt_txt.split(" ")[0] }
         .map { (date, forecasts) ->
-            DailyForecast(
+            ForecastEntity(
                 date = WeatherUtils.formatDateString(date),
                 minTemp = forecasts.minOf { it.main.temp_min },
                 maxTemp = forecasts.maxOf { it.main.temp_max },
@@ -29,3 +31,9 @@ fun ForecastResponse.toDailyForecastListDomainModel(): List<DailyForecast> {
             )
         }.take(5)
 }
+
+fun WeatherEntity.toDomain() =
+    Weather(temperature, condition, icon, windSpeed, feelsLike, humidity, pressure, visibility )
+
+fun ForecastEntity.toDomain() =
+    DailyForecast( date, minTemp, maxTemp, condition, icon)

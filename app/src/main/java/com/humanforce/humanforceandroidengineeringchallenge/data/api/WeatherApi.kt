@@ -1,7 +1,7 @@
 package com.humanforce.humanforceandroidengineeringchallenge.data.api
 
-import com.humanforce.humanforceandroidengineeringchallenge.data.models.ForecastResponse
-import com.humanforce.humanforceandroidengineeringchallenge.data.models.WeatherResponse
+import com.humanforce.humanforceandroidengineeringchallenge.data.models.apiresponses.ForecastResponse
+import com.humanforce.humanforceandroidengineeringchallenge.data.models.apiresponses.WeatherResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
 

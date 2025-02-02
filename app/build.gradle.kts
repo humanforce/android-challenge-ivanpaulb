@@ -55,27 +55,33 @@ android {
 
 dependencies {
 
-    implementation (libs.androidx.ui)
-    implementation (libs.androidx.lifecycle.runtime.ktx)
-    implementation (libs.androidx.lifecycle.viewmodel.compose)
-    implementation (libs.androidx.hilt.navigation.compose)
-    implementation (libs.retrofit)
-    implementation (libs.converter.gson)
-    implementation (libs.hilt.android)
-    implementation(libs.androidx.foundation.android)
-    implementation(libs.androidx.ui.text.google.fonts)
-    kapt(libs.hilt.compiler)
-    kapt (libs.hilt.android.compiler)
+    //Room Database
     implementation (libs.androidx.room.runtime)
     kapt(libs.androidx.room.compiler)
     implementation (libs.androidx.room.ktx)
+
+    //Hilt
+    implementation (libs.hilt.android)
+    implementation (libs.androidx.hilt.navigation.compose)
+    kapt(libs.hilt.compiler)
+    kapt (libs.hilt.android.compiler)
+
+    //Retrofit
+    implementation (libs.retrofit)
+    implementation (libs.converter.gson)
+
+
+    implementation (libs.androidx.ui)
+    implementation (libs.androidx.lifecycle.runtime.ktx)
+    implementation (libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.foundation.android)
+    implementation(libs.androidx.ui.text.google.fonts)
     implementation(libs.androidx.activity.compose)
     implementation(libs.ui)
     implementation (libs.coil.compose)
     implementation (libs.play.services.location)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation (libs.material3)
-
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
