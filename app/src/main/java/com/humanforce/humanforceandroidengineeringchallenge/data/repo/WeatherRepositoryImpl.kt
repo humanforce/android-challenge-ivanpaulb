@@ -4,7 +4,7 @@ import com.humanforce.humanforceandroidengineeringchallenge.BuildConfig
 import com.humanforce.humanforceandroidengineeringchallenge.data.api.ApiCallHelper
 import com.humanforce.humanforceandroidengineeringchallenge.data.api.ApiCallHelper.API_ERROR_MESSAGES
 import com.humanforce.humanforceandroidengineeringchallenge.data.api.Resource
-import com.humanforce.humanforceandroidengineeringchallenge.data.api.WeatherApi
+import com.humanforce.humanforceandroidengineeringchallenge.data.api.ApiInterface
 import com.humanforce.humanforceandroidengineeringchallenge.data.db.ForecastDao
 import com.humanforce.humanforceandroidengineeringchallenge.data.db.WeatherDao
 import com.humanforce.humanforceandroidengineeringchallenge.data.mapper.toDailyForecastListEntities
@@ -19,7 +19,7 @@ import javax.inject.Singleton
 
 @Singleton
 class WeatherRepositoryImpl @Inject constructor(
-    private val api: WeatherApi,
+    private val api: ApiInterface,
     private val apiHelper: ApiCallHelper,
     private val weatherDao: WeatherDao,
     private val forecastDao: ForecastDao,
@@ -57,7 +57,7 @@ class WeatherRepositoryImpl @Inject constructor(
             val forecastsApiData =
                 api.getFiveDayForecast(lat, lon, apiKey = BuildConfig.OPEN_WEATHER_MAP_API_KEY)
             val forecastEntities = forecastsApiData.toDailyForecastListEntities()
-            forecastDao.insertOrUpdateForecasts(forecastEntities)
+            forecastDao.insertAndReplaceForecasts(forecastEntities)
             forecastEntities.map { it.toDomain() }
         }
     }

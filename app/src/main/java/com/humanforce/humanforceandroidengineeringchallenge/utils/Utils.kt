@@ -3,7 +3,8 @@ package com.humanforce.humanforceandroidengineeringchallenge.utils
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-object WeatherUtils {
+object Utils {
+
 
     fun formatWeatherIconUrl(iconName: String): String {
         return "https://openweathermap.org/img/w/${iconName}.png"
@@ -31,4 +32,6 @@ object WeatherUtils {
             return ""
         }
     }
+
+
 }

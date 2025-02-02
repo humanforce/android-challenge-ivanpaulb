@@ -5,38 +5,34 @@ import android.content.Intent
 import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.core.content.PermissionChecker
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import com.humanforce.humanforceandroidengineeringchallenge.presentation.ui.LocationPermissionNotice
 import com.humanforce.humanforceandroidengineeringchallenge.presentation.ui.WeatherDashboard
 import com.humanforce.humanforceandroidengineeringchallenge.presentation.ui.theme.AppTheme
 import com.humanforce.humanforceandroidengineeringchallenge.presentation.viewmodel.LocationState
 import com.humanforce.humanforceandroidengineeringchallenge.presentation.viewmodel.LocationViewModel
 import com.humanforce.humanforceandroidengineeringchallenge.presentation.viewmodel.WeatherViewModel
+
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -50,39 +46,46 @@ class MainActivity : ComponentActivity() {
             registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
                 if (isGranted) {
                     locationViewModel.getCurrentLocation()
+                } else {
+                    locationViewModel.updateLocationState(LocationState.PermissionDenied)
                 }
             }
 
 
         setContent {
             val locationState by locationViewModel.locationState.collectAsState()
-
-            LaunchedEffect(Unit) {
-                if (ContextCompat.checkSelfPermission(
-                        this@MainActivity, Manifest.permission.ACCESS_FINE_LOCATION
-                    ) != PermissionChecker.PERMISSION_GRANTED
-                ) {
-                    requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-                } else {
-                    locationViewModel.getCurrentLocation()
-                }
-            }
+            var showEnableLocationModal by remember { mutableStateOf(false) }
+            var showGrantLocationModal by remember { mutableStateOf(false) }
 
             val fallbackScenarioModifier = Modifier
                 .fillMaxWidth()
                 .wrapContentSize()
-                .padding(40.dp)
+                .padding(20.dp)
 
             AppTheme {
-                when (locationState) {
-                    is LocationState.Loading -> {
-                        Column(modifier = fallbackScenarioModifier) {
-                            CircularProgressIndicator()
+                WeatherDashboard(weatherViewModel, locationViewModel)
+
+                LaunchedEffect(Unit) {
+                    val locationManager = getSystemService(LocationManager::class.java)
+                    if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                        locationViewModel.updateLocationState(LocationState.LocationServicesDisabled)
+                        showEnableLocationModal = true
+                    } else {
+                        if (ContextCompat.checkSelfPermission(
+                                this@MainActivity,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                        ) {
+                            locationViewModel.getCurrentLocation()
+                        } else {
+                            showGrantLocationModal = true
                         }
                     }
+                }
 
+                when (locationState) {
                     is LocationState.Success -> {
-                        WeatherDashboard(weatherViewModel, locationViewModel)
+                        Log.d("MainActivity", "Location Retrieval Success")
                     }
 
                     is LocationState.Error -> {
@@ -96,7 +99,11 @@ class MainActivity : ComponentActivity() {
                     is LocationState.LocationServicesDisabled -> {
                         LocationPermissionNotice(
                             modifier = fallbackScenarioModifier,
-                            btnLabel= stringResource(R.string.grant_location_label)){
+                            btnLabel= stringResource(R.string.enable_location_label),
+                            showDialog = showEnableLocationModal,
+                            onDismissRequest = {
+                                showEnableLocationModal = false
+                            }){
                             val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
                             startActivity(intent)
                         }
@@ -105,40 +112,31 @@ class MainActivity : ComponentActivity() {
                     is LocationState.PermissionDenied -> {
                         LocationPermissionNotice(
                             modifier = fallbackScenarioModifier,
-                            btnLabel= stringResource(R.string.grant_location_label)){
-                            requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                            btnLabel= stringResource(R.string.grant_location_label),
+                            showDialog = showGrantLocationModal,
+                            onDismissRequest = {
+                                showGrantLocationModal = false
+                            }){
+                            requestPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+
+                        }
+                    } else -> {
+                        LocationPermissionNotice(
+                            modifier = fallbackScenarioModifier,
+                            btnLabel= stringResource(R.string.grant_location_label),
+                            showDialog = showGrantLocationModal,
+                            onDismissRequest = {
+                                showGrantLocationModal = false
+                            }){
+                            requestPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
 
                         }
                     }
-
                 }
             }
         }
 
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                checkLocationServicesEnabled()
-            }
-        }
-
     }
 
-    private fun checkLocationServicesEnabled() {
-        val locationManager = getSystemService(LocationManager::class.java)
-        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            locationViewModel.updateLocationState(LocationState.LocationServicesDisabled)
-        } else {
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-            ) {
-                locationViewModel.getCurrentLocation()
-            } else {
-                locationViewModel.updateLocationState(LocationState.PermissionDenied)
-            }
-        }
-    }
 
 }

@@ -1,12 +1,15 @@
 package com.humanforce.humanforceandroidengineeringchallenge.data.mapper
 
+import com.humanforce.humanforceandroidengineeringchallenge.data.models.apiresponses.CityResponse
 import com.humanforce.humanforceandroidengineeringchallenge.data.models.apiresponses.ForecastResponse
 import com.humanforce.humanforceandroidengineeringchallenge.data.models.apiresponses.WeatherResponse
 import com.humanforce.humanforceandroidengineeringchallenge.data.models.entities.ForecastEntity
+import com.humanforce.humanforceandroidengineeringchallenge.data.models.entities.LocationEntity
 import com.humanforce.humanforceandroidengineeringchallenge.data.models.entities.WeatherEntity
 import com.humanforce.humanforceandroidengineeringchallenge.domain.models.DailyForecast
+import com.humanforce.humanforceandroidengineeringchallenge.domain.models.SavedLocation
 import com.humanforce.humanforceandroidengineeringchallenge.domain.models.Weather
-import com.humanforce.humanforceandroidengineeringchallenge.utils.WeatherUtils
+import com.humanforce.humanforceandroidengineeringchallenge.utils.Utils
 
 fun WeatherResponse.toWeatherEntity() = WeatherEntity(
     temperature = main.temp,
@@ -23,7 +26,7 @@ fun ForecastResponse.toDailyForecastListEntities() : List<ForecastEntity> {
     return list.groupBy { it.dt_txt.split(" ")[0] }
         .map { (date, forecasts) ->
             ForecastEntity(
-                date = WeatherUtils.formatDateString(date),
+                date = Utils.formatDateString(date),
                 minTemp = forecasts.minOf { it.main.temp_min },
                 maxTemp = forecasts.maxOf { it.main.temp_max },
                 condition = forecasts[0].weather[0].description,
@@ -32,8 +35,18 @@ fun ForecastResponse.toDailyForecastListEntities() : List<ForecastEntity> {
         }.take(5)
 }
 
+fun CityResponse.toLocationEntity() = LocationEntity(
+    city = name,
+    latitude = lat,
+    longitude = lon,
+    country = country
+)
+
 fun WeatherEntity.toDomain() =
     Weather(temperature, condition, icon, windSpeed, feelsLike, humidity, pressure, visibility )
 
 fun ForecastEntity.toDomain() =
     DailyForecast( date, minTemp, maxTemp, condition, icon)
+
+fun LocationEntity.toDomain() =
+    SavedLocation(city, latitude, longitude, country)
